@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Interview Portal</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="./stylesai.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AI Interview Portal</h1>
+            <p>Your next-generation interview experience</p>
+        </header>
+
+        <div class="main-grid">
+            <!-- Video Section -->
+            <div class="video-section">
+                <div class="video-container">
+                    <video id="videoElement" autoplay playsinline></video>
+                    <div class="video-placeholder">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 8l-6 4 6 4V8z"/><rect x="2" y="6" width="14" height="12" rx="2" ry="2"/>
+                        </svg>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button id="cameraButton" class="control-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 8l-6 4 6 4V8z"/><rect x="2" y="6" width="14" height="12" rx="2" ry="2"/>
+                        </svg>
+                    </button>
+                    <button id="micButton" class="control-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Chat Section -->
+            <div class="chat-section">
+                <div class="chat-header">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    <h2>Interview Chat</h2>
+                </div>
+                
+                <div id="chatMessages" class="chat-messages"></div>
+
+                <form id="chatForm" class="chat-form">
+                    <input type="text" id="messageInput" placeholder="Type your message...">
+                    <button type="submit">Send</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Interview Status -->
+        <div class="status-section">
+            <h2>Interview Status</h2>
+            <div class="status-grid">
+                <div class="status-item">
+                    <div class="status-indicator" id="cameraStatus"></div>
+                    <span>Camera</span>
+                </div>
+                <div class="status-item">
+                    <div class="status-indicator" id="micStatus"></div>
+                    <span>Microphone</span>
+                </div>
+                <div class="status-item">
+                    <div class="status-indicator active"></div>
+                    <span>Connection</span>
+                </div>
+                <div class="status-item">
+                    <div class="status-indicator pending"></div>
+                    <span>Interview Progress</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+    // Elements
+    const videoElement = document.getElementById('videoElement');
+    const videoPlaceholder = document.querySelector('.video-placeholder');
+    const cameraButton = document.getElementById('cameraButton');
+    const micButton = document.getElementById('micButton');
+    const chatForm = document.getElementById('chatForm');
+    const messageInput = document.getElementById('messageInput');
+    const chatMessages = document.getElementById('chatMessages');
+    const cameraStatus = document.getElementById('cameraStatus');
+    const micStatus = document.getElementById('micStatus');
+
+    // State
+    let mediaStream = null;
+    let isCameraOn = false;
+    let isMicOn = false;
+
+    // Camera toggle
+    async function toggleCamera() {
+        try {
+            if (!isCameraOn) {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                videoElement.srcObject = stream;
+                mediaStream = stream;
+                isCameraOn = true;
+                cameraButton.classList.add('active');
+                videoPlaceholder.classList.add('hidden');
+                cameraStatus.classList.add('active');
+            } else {
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach(track => track.stop());
+                }
+                videoElement.srcObject = null;
+                isCameraOn = false;
+                cameraButton.classList.remove('active');
+                videoPlaceholder.classList.remove('hidden');
+                cameraStatus.classList.remove('active');
+            }
+        } catch (err) {
+            console.error('Error accessing camera:', err);
+            alert('Unable to access camera. Please check permissions.');
+        }
+    }
+
+    // Microphone toggle
+    async function toggleMic() {
+        try {
+            if (!isMicOn) {
+                await navigator.mediaDevices.getUserMedia({ audio: true });
+                isMicOn = true;
+                micButton.classList.add('active');
+                micStatus.classList.add('active');
+            } else {
+                isMicOn = false;
+                micButton.classList.remove('active');
+                micStatus.classList.remove('active');
+            }
+        } catch (err) {
+            console.error('Error accessing microphone:', err);
+            alert('Unable to access microphone. Please check permissions.');
+        }
+    }
+
+    // Send message
+    function sendMessage(e) {
+        e.preventDefault();
+        const message = messageInput.value.trim();
+        if (message) {
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message';
+            messageElement.textContent = message;
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            messageInput.value = '';
+        }
+    }
+
+    // Event listeners
+    cameraButton.addEventListener('click', toggleCamera);
+    micButton.addEventListener('click', toggleMic);
+    chatForm.addEventListener('submit', sendMessage);
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+        if (mediaStream) {
+            mediaStream.getTracks().forEach(track => track.stop());
+        }
+    });
+});
+</script>
